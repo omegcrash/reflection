@@ -71,38 +71,47 @@ Environment-dependent test (likely hardware detection or optional dependency).
 
 ---
 
+## Verified Implemented (Previously Misclassified as Stubs)
+
+These files were initially classified as stubs but are **fully implemented and wired**
+in `app.py`. Corrected 2026-02-25 after code review.
+
+### ~~Gateway: Request Context Middleware~~ ✅ Implemented
+**File:** `reflection/gateway/request_context.py` (413 lines)
+**Implementation:** Full `RequestContextMiddleware` with ContextVar propagation,
+X-Request-ID generation/forwarding, tenant context injection, structured logging filter.
+**Wired in:** `app.py` — always registered as middleware.
+
+### ~~Gateway: Token Store~~ ✅ Implemented
+**File:** `reflection/gateway/token_store.py` (622 lines)
+**Implementation:** Redis-backed `TokenStore` with session management, refresh token
+rotation, `TokenReuseError` detection for replay attacks.
+**Wired in:** `JWTService.decode_token_async()` in `auth.py`.
+
+### ~~Gateway: Quota Middleware~~ ✅ Implemented
+**File:** `reflection/gateway/quota_middleware.py` (316 lines)
+**Implementation:** Full `QuotaMiddleware(BaseHTTPMiddleware)` with `QuotaChecker`
+dependency injection, per-request quota enforcement, 429 responses.
+**Wired in:** `app.py` — conditional on `settings.quota_middleware_enabled`.
+
+### ~~Gateway: Rate Limiter~~ ✅ Implemented
+**File:** `reflection/gateway/rate_limit.py` (425 lines)
+**Implementation:** Redis-backed `RateLimiter` + `LoginRateLimiter` with sliding window
+algorithm, progressive lockout, configurable thresholds.
+**Wired in:** `auth_routes.py` — login endpoint brute-force protection.
+
+### ~~Observability: Middleware~~ ✅ Implemented
+**File:** `reflection/observability/middleware.py` (251 lines)
+**Implementation:** `MetricsMiddleware` (Prometheus request metrics) + `TracingMiddleware`
+(OpenTelemetry span creation), path normalization for cardinality control.
+**Wired in:** `app.py` — `MetricsMiddleware` always registered, `TracingMiddleware`
+production only.
+
+---
+
 ## Known Intentional Stubs
 
-These files have structure but incomplete or placeholder logic. They are in the
-request path and should be prioritized for implementation.
-
-### Gateway: Request Context Middleware
-**File:** `reflection/gateway/request_context.py`
-**What exists:** Module file with imports.
-**What's missing:** Full request context propagation (X-Request-ID, tenant context injection).
-**Impact:** Request tracing incomplete without this middleware.
-**Priority:** High — in the request path.
-
-### Gateway: Token Store
-**File:** `reflection/gateway/token_store.py`
-**What exists:** Module file with imports.
-**What's missing:** Token storage and revocation implementation (Redis-backed).
-**Impact:** Token revocation (listed in CHANGELOG v1.2.0) not functional.
-**Priority:** High — security feature.
-
-### Gateway: Quota Middleware
-**File:** `reflection/gateway/quota_middleware.py`
-**What exists:** Module file with imports.
-**What's missing:** Per-request quota enforcement in the middleware layer.
-**Impact:** Quota checks may only happen at the service layer, not at the gateway.
-**Priority:** Medium — quotas still enforced by QuotaService, this is defense-in-depth.
-
-### Gateway: Rate Limiter
-**File:** `reflection/gateway/rate_limit.py`
-**What exists:** Module file with imports.
-**What's missing:** Auth endpoint rate limiting implementation.
-**Impact:** Brute-force protection on login/register endpoints.
-**Priority:** High — security feature.
+These files have structure but incomplete or placeholder logic.
 
 ### Gateway: Chat Routes V2
 **File:** `reflection/gateway/chat_routes_v2.py`
@@ -129,13 +138,6 @@ request path and should be prioritized for implementation.
 **What exists:** Module file with imports.
 **What's missing:** Multi-channel support wrapper for tenant-scoped channel management.
 **Priority:** Low — channels work via Familiar directly.
-
-### Observability: Middleware
-**File:** `reflection/observability/middleware.py`
-**What exists:** Module file with imports.
-**What's missing:** Auto-instrumentation middleware for logging/tracing per request.
-**Impact:** Observability requires manual instrumentation without this.
-**Priority:** Medium.
 
 ### Reflection Core: Types Package
 **File:** `reflection_core/types/__init__.py`
@@ -188,7 +190,11 @@ Reflection v2.0.0 — Enterprise Multi-Tenant AI Platform
 │   │   ├── chat_routes.py        — Chat completions + streaming
 │   │   ├── sso_routes.py         — Enterprise SSO endpoints
 │   │   ├── health.py             — Kubernetes probes + Prometheus
-│   │   └── [4 stubs]             — request_context, token_store, quota, rate_limit
+│   │   ├── request_context.py    — ContextVar propagation + X-Request-ID (413 lines)
+│   │   ├── token_store.py        — Redis-backed session + refresh rotation (622 lines)
+│   │   ├── quota_middleware.py    — Per-request quota enforcement (316 lines)
+│   │   ├── rate_limit.py         — Sliding window + progressive lockout (425 lines)
+│   │   └── chat_routes_v2.py     — [stub] V2 chat API scaffold
 │   ├── tenants/
 │   │   ├── context.py            — contextvars isolation
 │   │   ├── quotas.py             — Redis-backed enforcement
@@ -201,7 +207,7 @@ Reflection v2.0.0 — Enterprise Multi-Tenant AI Platform
 │   │   ├── logging.py            — Structured JSON + PII masking
 │   │   ├── metrics.py            — 50+ Prometheus metrics
 │   │   ├── tracing.py            — OpenTelemetry + fallback
-│   │   └── [1 stub]              — middleware
+│   │   └── middleware.py          — Metrics + Tracing auto-instrumentation (251 lines)
 │   ├── routing/
 │   │   ├── smart_router.py       — HIPAA-aware LLM routing
 │   │   └── phi_detector.py       — PHI/PII detection (18 identifiers)
@@ -274,5 +280,6 @@ Current result: 700 passed, 0 failed, 1 skipped.
 
 1. ~~**Familiar PyPI publish:**~~ ✅ Resolved — v1.6.1 published to PyPI.
 2. ~~**SKILL.md packaging:**~~ ✅ Resolved — fixed in Familiar v1.6.1.
-3. **Stub priority:** The 4 gateway stubs (request_context, token_store, quota_middleware,
-   rate_limit) are in the request path. Should these be wired before any new features?
+3. ~~**Stub priority:**~~ ✅ Resolved — the 4 gateway files (request_context, token_store,
+   quota_middleware, rate_limit) were misclassified as stubs. All are fully implemented
+   and wired in `app.py` / `auth_routes.py`. Corrected 2026-02-25.
