@@ -132,17 +132,21 @@ channel classes for Discord, Telegram, Teams.
 **Wired in:** `app.py` — startup/shutdown lifecycle hooks initialize the singleton
 and gracefully stop all running channels. Corrected 2026-02-25 after code review.
 
+### ~~Gateway: Chat Routes V2~~ ✅ Implemented
+**File:** `reflection/gateway/chat_routes_v2.py` (365 lines)
+**Implementation:** 3 endpoints (`POST /v2/chat/completions`, `GET /v2/chat/path-info`,
+`POST /v2/chat/simple`). Dual-path routing: async (direct provider call) vs sync
+(thread pool + full Familiar Agent) via `AsyncOrchestrator` (967 lines). SSE streaming
+with nginx-aware headers. Full auth with JWT, API key, and dev fallback — resolves
+tenant tier from DB.
+**Wired in:** `app.py` — `app.include_router(chat_router_v2, prefix="/api")`.
+Corrected 2026-02-25 after code review.
+
 ---
 
 ## Known Intentional Stubs
 
-These files have structure but incomplete or placeholder logic.
-
-### Gateway: Chat Routes V2
-**File:** `reflection/gateway/chat_routes_v2.py`
-**What exists:** Shell/scaffold for enhanced v2 chat API.
-**What's missing:** Full v2 implementation (streaming, enhanced tool use).
-**Priority:** Medium — v1 chat routes are functional.
+This file has structure but incomplete or placeholder logic.
 
 ### Reflection Core: Types Package
 **File:** `reflection_core/types/__init__.py`
@@ -199,7 +203,7 @@ Reflection v2.0.0 — Enterprise Multi-Tenant AI Platform
 │   │   ├── token_store.py        — Redis-backed session + refresh rotation (622 lines)
 │   │   ├── quota_middleware.py    — Per-request quota enforcement (316 lines)
 │   │   ├── rate_limit.py         — Sliding window + progressive lockout (425 lines)
-│   │   └── chat_routes_v2.py     — [stub] V2 chat API scaffold
+│   │   └── chat_routes_v2.py     — Async dual-path chat API (365 lines)
 │   ├── tenants/
 │   │   ├── context.py            — contextvars isolation
 │   │   ├── quotas.py             — Redis-backed enforcement
