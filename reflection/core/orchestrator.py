@@ -230,6 +230,7 @@ class AgentOrchestrator:
         self._agent = TenantAgent(
             tenant_id=self.tenant_id,
             tenant_config=tenant_config,
+            db_session=self.session,
         )
 
         return self._agent

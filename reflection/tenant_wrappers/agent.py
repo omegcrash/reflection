@@ -66,6 +66,7 @@ class TenantAgent(Agent):
         config: Config | None = None,
         tenant_config: dict[str, Any] | None = None,
         security_mode=None,
+        db_session=None,
     ):
         self.tenant_id = tenant_id
         self.tenant_config = tenant_config or {}
@@ -82,6 +83,26 @@ class TenantAgent(Agent):
 
         # Tenant-specific tracking
         self._usage_callback = None
+
+        # Wire TenantMemory for database-backed tenant isolation
+        if db_session is not None:
+            from .memory import TenantMemory
+
+            self.memory = TenantMemory(
+                tenant_id=tenant_id,
+                session=db_session,
+            )
+
+        # Wire TenantToolRegistry for per-tenant tool isolation
+        from .tools import get_tenant_tool_registry
+
+        self._tenant_tools = get_tenant_tool_registry(tenant_id)
+
+        # Apply skill preset filtering if configured
+        if hasattr(self, "_allowed_skills"):
+            for tool_name in list(self._tenant_tools.get_all().keys()):
+                if tool_name not in self._allowed_skills:
+                    self._tenant_tools.disable_tool(tool_name)
 
         # Initialize smart routing for HIPAA compliance
         self._router = None

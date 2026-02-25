@@ -148,6 +148,27 @@ async def shutdown_async_providers():
     logger.info("Async providers shut down")
 
 
+@lifecycle.on_startup
+async def startup_channel_manager():
+    """Initialize tenant channel manager."""
+    from ..tenant_wrappers.channels import get_channel_manager
+
+    get_channel_manager()  # Lazy-creates the singleton
+    logger.info("Channel manager initialized")
+
+
+@lifecycle.on_shutdown
+async def shutdown_channel_manager():
+    """Stop all tenant channels gracefully."""
+    from ..tenant_wrappers.channels import get_channel_manager
+
+    manager = get_channel_manager()
+    for tenant_id in list(manager._running.keys()):
+        for channel_type in list(manager._running.get(tenant_id, {}).keys()):
+            await manager.stop_channel(tenant_id, channel_type)
+    logger.info("Channel manager shut down")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """FastAPI lifespan context manager."""

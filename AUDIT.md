@@ -107,6 +107,31 @@ algorithm, progressive lockout, configurable thresholds.
 **Wired in:** `app.py` — `MetricsMiddleware` always registered, `TracingMiddleware`
 production only.
 
+### ~~Tenant Wrappers: Memory~~ ✅ Implemented
+**File:** `reflection/tenant_wrappers/memory.py` (598 lines)
+**Implementation:** `TenantMemory(Memory)` — DB-native UPSERT, LRU cache with TTL,
+async+sync methods, SQL tenant isolation (tenant_id in every WHERE clause).
+Also `TenantConversationHistory` for scoped chat history.
+**Wired in:** `TenantAgent.__init__()` — replaces parent Memory when `db_session`
+is provided. `AgentOrchestrator._get_agent()` passes the session automatically.
+Corrected 2026-02-25 after code review.
+
+### ~~Tenant Wrappers: Tools~~ ✅ Implemented
+**File:** `reflection/tenant_wrappers/tools.py` (177 lines)
+**Implementation:** `TenantToolRegistry(ToolRegistry)` — per-tenant enable/disable,
+tenant-specific configs, usage tracking callback, sandboxed directories.
+**Wired in:** `TenantAgent.__init__()` — creates `_tenant_tools` via
+`get_tenant_tool_registry()`, applies skill preset filtering from `_allowed_skills`.
+Corrected 2026-02-25 after code review.
+
+### ~~Tenant Wrappers: Channels~~ ✅ Implemented
+**File:** `reflection/tenant_wrappers/channels.py` (312 lines)
+**Implementation:** `TenantChannelManager` (lifecycle management, health monitoring) +
+`TenantChannelRouter` (server/chat-to-tenant routing for shared bots). Conditional
+channel classes for Discord, Telegram, Teams.
+**Wired in:** `app.py` — startup/shutdown lifecycle hooks initialize the singleton
+and gracefully stop all running channels. Corrected 2026-02-25 after code review.
+
 ---
 
 ## Known Intentional Stubs
@@ -118,26 +143,6 @@ These files have structure but incomplete or placeholder logic.
 **What exists:** Shell/scaffold for enhanced v2 chat API.
 **What's missing:** Full v2 implementation (streaming, enhanced tool use).
 **Priority:** Medium — v1 chat routes are functional.
-
-### Tenant Wrappers: Memory
-**File:** `reflection/tenant_wrappers/memory.py`
-**What exists:** Module file with imports.
-**What's missing:** Tenant-scoped memory wrapper around Familiar's memory system.
-**Impact:** Memory operations may not be properly tenant-isolated.
-**Priority:** Medium — depends on whether TenantAgent handles this internally.
-
-### Tenant Wrappers: Tools
-**File:** `reflection/tenant_wrappers/tools.py`
-**What exists:** Module file with imports.
-**What's missing:** Tenant-scoped tool registry wrapper.
-**Impact:** Tool permissions may not be properly tenant-isolated.
-**Priority:** Medium.
-
-### Tenant Wrappers: Channels
-**File:** `reflection/tenant_wrappers/channels.py`
-**What exists:** Module file with imports.
-**What's missing:** Multi-channel support wrapper for tenant-scoped channel management.
-**Priority:** Low — channels work via Familiar directly.
 
 ### Reflection Core: Types Package
 **File:** `reflection_core/types/__init__.py`
@@ -202,7 +207,9 @@ Reflection v2.0.0 — Enterprise Multi-Tenant AI Platform
 │   │   └── quota_service.py      — Tier-based limits
 │   ├── tenant_wrappers/
 │   │   ├── agent.py              — TenantAgent (extends Familiar Agent)
-│   │   └── [3 stubs]             — memory, tools, channels
+│   │   ├── memory.py             — TenantMemory (DB-native, cached, tenant-isolated)
+│   │   ├── tools.py              — TenantToolRegistry (per-tenant enable/disable)
+│   │   └── channels.py           — TenantChannelManager + Router (multi-tenant bots)
 │   ├── observability/
 │   │   ├── logging.py            — Structured JSON + PII masking
 │   │   ├── metrics.py            — 50+ Prometheus metrics
