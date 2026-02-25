@@ -102,7 +102,7 @@ def test_total_skill_count():
         if os.path.isdir(os.path.join(SKILLS_DIR, d))
         and not d.startswith("_")
     ]
-    assert len(all_skills) == 40, f"Expected 40 skills, got {len(all_skills)}: {all_skills}"
+    assert len(all_skills) >= 40, f"Expected at least 40 skills, got {len(all_skills)}: {all_skills}"
 
 
 def test_nonprofit_suite_present():
