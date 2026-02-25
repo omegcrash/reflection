@@ -1,0 +1,118 @@
+# Reflection - Local Development Environment
+# Usage: docker-compose up -d
+
+
+services:
+  # ============================================================
+  # APPLICATION
+  # ============================================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://familiar:familiar@postgres:5432/reflection
+      - REDIS_URL=redis://redis:6379/0
+      - LLM_DEFAULT_PROVIDER=anthropic
+      - LLM_ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - LLM_OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SECURITY_JWT_SECRET_KEY=${JWT_SECRET_KEY:-development-secret-change-me}
+      - SECURITY_MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY:-}
+      - OTEL_ENABLED=false
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./reflection:/app/reflection:ro
+      - ./reflection_core:/app/reflection_core:ro
+    networks:
+      - familiar-network
+
+  # ============================================================
+  # DATABASE
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=familiar
+      - POSTGRES_PASSWORD=familiar
+      - POSTGRES_DB=reflection
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./reflection/data/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U familiar -d reflection"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - familiar-network
+
+  # ============================================================
+  # CACHE
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - familiar-network
+
+  # ============================================================
+  # OBSERVABILITY (Optional)
+  # ============================================================
+  # Uncomment for local observability stack
+  
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "16686:16686"  # UI
+  #     - "4317:4317"    # OTLP gRPC
+  #     - "4318:4318"    # OTLP HTTP
+  #   environment:
+  #     - COLLECTOR_OTLP_ENABLED=true
+  #   networks:
+  #     - familiar-network
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   networks:
+  #     - familiar-network
+
+# ============================================================
+# VOLUMES
+# ============================================================
+volumes:
+  postgres-data:
+  redis-data:
+
+# ============================================================
+# NETWORKS
+# ============================================================
+networks:
+  familiar-network:
+    driver: bridge
