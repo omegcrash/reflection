@@ -39,12 +39,12 @@ multi-tenant platform. Depends on `familiar-agent>=1.4.0` from PyPI.
 **Packages:** `reflection/` (69 .py files), `reflection_core/` (8 .py files)
 **Entry point:** `reflection` (CLI via typer, 20+ commands)
 **Build:** hatchling | Python >=3.11
-**Tests:** 667 passed, 1 failed, 1 skipped (10.6s)
+**Tests:** 700 passed, 0 failed, 1 skipped (10.7s)
 **Lint:** ruff check + format clean (77 files)
 
 ### Familiar Core Dependency
-Familiar v1.6.0 is the latest release of the core library (`omegcrash/familiar`).
-PyPI currently has `familiar-agent==1.4.1`. Key features available:
+Familiar v1.6.1 is the latest release of the core library (`omegcrash/familiar`).
+PyPI has `familiar-agent==1.6.1`. Key features available:
 - 50+ skills, all channel integrations (CLI, Telegram, Discord, Matrix, Teams, Signal, iMessage, WhatsApp, SMS)
 - IMAP server, mesh gateway peer auth, Double Ratchet prev_chain_len
 - 785 tests passing
@@ -53,14 +53,18 @@ PyPI currently has `familiar-agent==1.4.1`. Key features available:
 
 ## Test Results (2026-02-25)
 
-**667 passed, 1 failed, 1 skipped** across 19 test files in 10.6s.
+**700 passed, 0 failed, 1 skipped** across 19 test files in 10.7s.
+Tested against `familiar-agent==1.6.1` from PyPI.
 
-### Known Failure
-**`tests/test_mcp_server.py::TestSkillLoading::test_skill_description_from_md`**
-Expects `load_skill_tools("nonprofit")` to return a description loaded from `SKILL.md`.
-Fails because the PyPI package (`familiar-agent`) does not bundle `SKILL.md` files —
-they are excluded from the wheel. This is a **Familiar packaging issue**, not a
-Reflection bug. Fix: add `SKILL.md` to Familiar's package data in `pyproject.toml`.
+### ~~Known Failure: SKILL.md packaging~~ ✅ Fixed (Familiar v1.6.1)
+`test_skill_description_from_md` previously failed because the PyPI wheel did not
+bundle `SKILL.md` files. Fixed in Familiar v1.6.1 by adding `artifacts` config to
+`[tool.hatch.build.targets.wheel]` in `pyproject.toml`. 44 SKILL.md + 27 config.yaml
+files now included in the wheel.
+
+### ~~Known Failure: Skill count assertion~~ ✅ Fixed (Reflection 6bb1e2e)
+`test_total_skill_count` hardcoded `== 40` but Familiar v1.6.1 ships 48 skills.
+Changed to `>= 40` so it doesn't break when upstream adds skills.
 
 ### Known Skip
 Environment-dependent test (likely hardware detection or optional dependency).
@@ -143,17 +147,13 @@ request path and should be prioritized for implementation.
 
 ## Known Technical Debt
 
-### Familiar PyPI Package: Missing Non-Python Files
-`familiar-agent` on PyPI does not include `SKILL.md` files in skill directories.
-These are needed by `load_skill_tools()` to provide rich descriptions. Causes one
-test failure in Reflection. Fix: update Familiar's `pyproject.toml` to include
-`*.md` files in package data.
+### ~~Familiar PyPI Package: Missing Non-Python Files~~ ✅ Fixed (Familiar v1.6.1)
+Fixed by adding `artifacts` to wheel build config. 44 SKILL.md + 27 config.yaml
+files now included.
 
-### Familiar PyPI Version Lag
-PyPI has `familiar-agent==1.4.1` but local Familiar repo is at v1.6.0.
-Reflection tests run against the PyPI version. New Familiar features (IMAP, mesh
-gateway auth, prev_chain_len) are not testable in Reflection until v1.6.0 is
-published to PyPI.
+### ~~Familiar PyPI Version Lag~~ ✅ Resolved (v1.6.1 published)
+`familiar-agent==1.6.1` is now on PyPI with all v1.6.0 features (IMAP, mesh
+gateway auth, prev_chain_len) plus the packaging fix.
 
 ---
 
@@ -266,15 +266,13 @@ Runs on push to main/master/feat/** and pull requests.
 **Jobs:** Lint (ruff check + format), Test (matrix), Verify Import, Docker Build
 **Lint:** ruff check + format — both clean (77 files)
 
-Current result: 667 passed, 1 failed (known — SKILL.md packaging), 1 skipped.
+Current result: 700 passed, 0 failed, 1 skipped.
 
 ---
 
 ## Open Questions
 
-1. **Familiar PyPI publish:** When will v1.6.0 be published to PyPI? Reflection
-   tests run against the PyPI version, so new features aren't testable until published.
-2. **SKILL.md packaging:** Should Familiar's `pyproject.toml` include `*.md` files
-   in package data to fix the one test failure?
+1. ~~**Familiar PyPI publish:**~~ ✅ Resolved — v1.6.1 published to PyPI.
+2. ~~**SKILL.md packaging:**~~ ✅ Resolved — fixed in Familiar v1.6.1.
 3. **Stub priority:** The 4 gateway stubs (request_context, token_store, quota_middleware,
    rate_limit) are in the request path. Should these be wired before any new features?
