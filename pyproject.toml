@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reflection"
-version = "2.0.0"
+version = "2.0.1"
 description = "Enterprise Multi-Tenant AI Companion Platform"
 readme = "README.md"
 license = "MIT"
