@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "reflection"
+name = "reflection-agent"
 version = "2.0.2"
 description = "Enterprise Multi-Tenant AI Companion Platform"
 readme = "README.md"
