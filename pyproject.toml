@@ -28,7 +28,7 @@ classifiers = [
 
 dependencies = [
     # Familiar core
-    "familiar-agent>=1.14.40a1",
+    "familiar-agent>=1.14.40a2",
 
     # Async HTTP
     "httpx>=0.27.0",
