@@ -1,6 +1,6 @@
 # Reflection — Enterprise Multi-Tenant AI Platform
 
-- **Package**: `reflection-agent` v2.0.17
+- **Package**: `reflection-agent` v2.0.18
 - **Language**: Python >=3.11
 - **Build**: hatchling
 - **License**: MIT
