@@ -1,6 +1,6 @@
 # Reflection — Enterprise Multi-Tenant AI Platform
 
-- **Package**: `reflection-agent` v2.0.23
+- **Package**: `reflection-agent` v2.0.24
 - **Language**: Python >=3.11
 - **Build**: hatchling
 - **License**: MIT
@@ -62,7 +62,7 @@ reflection serve
 - **Mypy**: strict mode enabled — all functions must have type annotations
 - **Async tests**: `asyncio_mode = "auto"`
 - **Target Python**: 3.11 — 3.10 syntax is not sufficient
-- **Depends on**: `familiar-agent>=1.14.41` (from PyPI)
+- **Depends on**: `familiar-agent>=1.14.42` (from PyPI)
 - **Web framework**: FastAPI + Uvicorn
 - **Database**: PostgreSQL (asyncpg) + SQLAlchemy async + Alembic migrations
 - **Entry point**: `reflection` CLI (typer)
