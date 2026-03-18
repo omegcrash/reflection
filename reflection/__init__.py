@@ -58,7 +58,7 @@ from __future__ import annotations
 import importlib
 from typing import TYPE_CHECKING
 
-__version__ = "2.0.58"
+__version__ = "2.0.59"
 __author__ = "Familiar AI"
 
 if TYPE_CHECKING:
